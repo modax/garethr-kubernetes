@@ -1,7 +1,6 @@
 require 'puppet'
 
 require_relative '../swagger/provider'
-require_relative '../swagger/fixnumify'
 require_relative '../../../kubeclient/config'
 
 # With the Kiubernetes proxy on OpenShift (or maybe a change in Kuberenetes 1.2)
@@ -51,7 +50,7 @@ module PuppetX
         def make_object(type, name, params)
           klass = type.split('_').collect(&:capitalize).join
           params[:metadata] = {} unless params.key?(:metadata)
-          p = params.symbolize_keys.fixnumify
+          p = params.symbolize_keys
           object = Object::const_get("Kubeclient::#{klass}").new(p)
           object.metadata.name = name
           object.metadata.namespace = namespace unless namespace.nil?
@@ -85,18 +84,18 @@ module PuppetX
             if value.respond_to? :each
               value.each do |inner_key,inner_value|
                 if [Fixnum, String].include? inner_value.class
-                  data << [[key,inner_key], inner_value.fixnumify]
+                  data << [[key,inner_key], inner_value]
                 end
                 if inner_value.class == Array
                   inner_value.each_with_index do |item,index|
                     item.each do |k,v|
-                      data << [[key, inner_key, index, k], v.fixnumify]
+                      data << [[key, inner_key, index, k], v]
                     end
                   end
                 end
               end
             else
-              data << [[key], value.fixnumify]
+              data << [[key], value]
             end
           end
           data
